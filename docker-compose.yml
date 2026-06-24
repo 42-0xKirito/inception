@@ -1,0 +1,56 @@
+services:
+
+  mariadb:
+    build: srcs/requirements/mariadb
+    container_name: mariadb
+    restart: unless-stopped
+    env_file: srcs/.env
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - inception
+
+  wordpress:
+    build: srcs/requirements/wordpress
+    container_name: wordpress
+    restart: unless-stopped
+    env_file: srcs/.env
+    depends_on:
+      - mariadb
+    volumes:
+      - wp_data:/var/www/html
+    networks:
+      - inception
+
+  nginx:
+    build: srcs/requirements/nginx
+    container_name: nginx
+    restart: unless-stopped
+    env_file: srcs/.env
+    depends_on:
+      - wordpress
+    ports:
+      - "443:443"
+    volumes:
+      - wp_data:/var/www/html
+    networks:
+      - inception
+
+
+volumes:
+  db_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/engiacom/data/mariadb
+  wp_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/engiacom/data/wordpress
+
+networks:
+  inception:
+    driver: bridge
